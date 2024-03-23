@@ -16,7 +16,7 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required: true,
+        // required: true,
     },
     otp: {
         type: Number,
@@ -24,6 +24,12 @@ const userSchema = new Schema({
     verifyEmail: {
         type: Boolean
     },
+    image: {
+        type: String,
+    },
+    from: {
+        type: String
+    }
 })
 
 

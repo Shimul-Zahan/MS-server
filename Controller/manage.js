@@ -58,6 +58,7 @@ router.post('/resgistration', upload.single('image'), async (req, res) => {
             role: 'user',
             otp,
             image: req.file.filename,
+            verifyEmail: true,
         }).save();
         const info = await transporter.sendMail({
             from: '"Fred Foo 👻" <testmail@gmail.com>',
@@ -95,11 +96,27 @@ router.post('/otp-verification', async (req, res) => {
 //! -----------login route----------
 router.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, role, image, verifyEmail, name, from } = req.body;
+        const useremail = await User.findOne({ email });
+        if (useremail && from) {
+            return res.json({ message: 'already in db' });
+        }
+        if (from) {
+            const newUser = await new User({
+                email,
+                name,
+                role,
+                image,
+                verifyEmail,
+            }).save();
+            return res.status(200).json({ message: 'successfully created', newUser });
+        }
+        // const { email, password } = req.body;
         const user = await User.findOne({ email });
         if (!user) {
             return res.json({ message: 'email didn"t match' });
         }
+        console.log(user);
         if (user) {
             const passwordMatch = await bcrypt.compare(password, user.password);
             if (!passwordMatch) {
@@ -117,10 +134,28 @@ router.post('/login', async (req, res) => {
             token,
             role: user.role,
             login: true,
+            image: user?.image,
+            verifyEmail: user?.verifyEmail,
         })
     } catch (error) {
         console.log(error);
     }
+})
+
+// --------------- get all user------------------
+
+router.get('/users', async (req, res) => {
+    const users = await User.find();
+    console.log(users);
+    res.json(users);
+})
+
+// ------------delete users---------------
+
+router.delete('/users', async (req, res) => {
+    const _id = req.query.id;
+    const result = await User.deleteOne({ _id })
+    res.json({ message: 'deleted successsfully' });
 })
 
 //!-----------reset password----------
